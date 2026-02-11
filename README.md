@@ -5,7 +5,17 @@
 `object-graph-delta` computes deterministic `CREATE` / `CHANGE` / `REMOVE` events between two object/array graphs.
 It is designed for scenarios where you need path-based change events instead of just boolean equality.
 
-## Features
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Getting Started](#getting-started)
+3. [Configuration](#configuration)
+4. [Usage](#usage)
+5. [Reference](#reference)
+
+## Overview
+
+### Features
 
 - **Deterministic diff events:** Emits `REMOVE` and `CHANGE` first, then `CREATE`, in stable key/index order.
 - **Operational array policies:** Choose between `diff`, `atomic`, and `ignore` array handling.
@@ -14,7 +24,7 @@ It is designed for scenarios where you need path-based change events instead of 
 - **Object key filtering:** Skip specific object keys via `keysToSkip` without affecting array indices.
 - **TypeScript-friendly API:** Strongly typed paths and diff result unions.
 
-## Why Use It?
+### Why Use It?
 
 | Need | What this package gives you |
 | --- | --- |
@@ -23,7 +33,7 @@ It is designed for scenarios where you need path-based change events instead of 
 | Safe comparison of cyclic graphs | Built-in cycle tracking (`trackCircularReferences`) |
 | Correct treatment of tricky JS values | `Object.is` semantics, rich-type handling, boxed primitive equality |
 
-## Diff Model
+### Diff Model
 
 Each diff entry includes a `path` (`(string | number)[]`) and one of:
 
@@ -35,7 +45,9 @@ Example path:
 
 - `['users', 0, 'name']` means `root.users[0].name`
 
-## Installation
+## Getting Started
+
+### Installation
 
 ```bash
 npm install object-graph-delta
@@ -45,7 +57,7 @@ pnpm add object-graph-delta
 yarn add object-graph-delta
 ```
 
-## Quick Start
+### Quick Start
 
 ```ts
 import { diff } from 'object-graph-delta';
@@ -67,11 +79,13 @@ Output:
 ]
 ```
 
-## Operational Policies
+## Configuration
+
+### Operational Policies
 
 Array handling is the core runtime policy switch.
 
-### Array Policy Matrix
+#### Array Policy Matrix
 
 | `arrayPolicy` | Behavior | Emits |
 | --- | --- | --- |
@@ -79,7 +93,7 @@ Array handling is the core runtime policy switch.
 | `'atomic'` | Treats each array as one leaf value | At most one `CHANGE` at the array path |
 | `'ignore'` | Skips array comparison entirely | Nothing for arrays |
 
-### Atomic Equality Modes
+#### Atomic Equality Modes
 
 Used only when `arrayPolicy: 'atomic'`:
 
@@ -88,7 +102,7 @@ Used only when `arrayPolicy: 'atomic'`:
 | `'reference'` | Equal only if `a === b` |
 | `'shallow'` | Equal if same length and each element matches via `Object.is` |
 
-### Default Policy
+#### Default Policy
 
 Default options are:
 
@@ -104,9 +118,11 @@ When `arrayPolicy` is `'atomic'` and `arrayEquality` is omitted, `'shallow'` is 
 
 `arrayEquality` is only relevant in `atomic` mode. Set it explicitly when using `arrayPolicy: 'atomic'`.
 
-## Examples (Simple to Complex)
+## Usage
 
-### 1. Basic Value Change
+### Examples (Simple to Complex)
+
+#### 1. Basic Value Change
 
 ```ts
 import { diff } from 'object-graph-delta';
@@ -115,7 +131,7 @@ diff({ a: 1 }, { a: 2 });
 // [{ type: 'CHANGE', path: ['a'], value: 2, oldValue: 1 }]
 ```
 
-### 2. Nested Array Diff (Default `arrayPolicy: 'diff'`)
+#### 2. Nested Array Diff (Default `arrayPolicy: 'diff'`)
 
 ```ts
 import { diff } from 'object-graph-delta';
@@ -127,7 +143,7 @@ diff({ list: [1, 2, 3] }, { list: [1, 3] });
 // ]
 ```
 
-### 3. Atomic Arrays (`reference` vs `shallow`)
+#### 3. Atomic Arrays (`reference` vs `shallow`)
 
 ```ts
 import { diff } from 'object-graph-delta';
@@ -142,7 +158,7 @@ diff(previous, current, { arrayPolicy: 'atomic', arrayEquality: 'shallow' });
 // []
 ```
 
-### 4. Ignore Arrays Entirely
+#### 4. Ignore Arrays Entirely
 
 ```ts
 import { diff } from 'object-graph-delta';
@@ -155,7 +171,7 @@ diff(
 // [{ type: 'CHANGE', path: ['version'], value: 2, oldValue: 1 }]
 ```
 
-### 5. Skip Keys and Handle Cycles
+#### 5. Skip Keys and Handle Cycles
 
 ```ts
 import { diff } from 'object-graph-delta';
@@ -173,9 +189,9 @@ diff(previous, current, {
 // [{ type: 'CHANGE', path: ['a'], value: 2, oldValue: 1 }]
 ```
 
-## How to Use
+### How to Use
 
-### Step 1: Provide Two Root Containers
+#### Step 1: Provide Two Root Containers
 
 The public API compares two root containers (objects or arrays):
 
@@ -186,7 +202,7 @@ const previous = { user: { name: 'Alice' } };
 const current = { user: { name: 'Bob' } };
 ```
 
-### Step 2: Choose Options for Your Use Case
+#### Step 2: Choose Options for Your Use Case
 
 ```ts
 const result = diff(previous, current, {
@@ -196,7 +212,7 @@ const result = diff(previous, current, {
 });
 ```
 
-### Step 3: Consume Diff Events
+#### Step 3: Consume Diff Events
 
 ```ts
 for (const change of result) {
@@ -206,9 +222,11 @@ for (const change of result) {
 }
 ```
 
-## API Reference
+## Reference
 
-### Function
+### API Reference
+
+#### Function
 
 ```ts
 diff<V>(
@@ -218,7 +236,7 @@ diff<V>(
 ): DiffResult<Node<V>>[]
 ```
 
-### Options
+#### Options
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -227,7 +245,7 @@ diff<V>(
 | `arrayEquality` | `'reference' \| 'shallow'` | `'shallow'` (when `arrayPolicy: 'atomic'` and omitted) | Used in `atomic` mode to decide array equality |
 | `keysToSkip` | `readonly string[]` | `[]` | Skips object keys (does not apply to array indices) |
 
-## Behavioral Notes (Backed by Tests)
+### Behavioral Notes (Backed by Tests)
 
 - Equality is based on `Object.is` for leaf values.
 - `NaN` equals `NaN`; `+0` and `-0` are different.
